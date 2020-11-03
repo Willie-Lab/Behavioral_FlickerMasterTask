@@ -7,7 +7,9 @@ function [PARAMETERS,trials]=initialize_FlickerMemoryTask()
     
     %% Pick and images we'll need for practice, study and test:
     num_images=PARAMETERS.num_practice_images+PARAMETERS.num_study_images+PARAMETERS.num_study_images/2; %calculate total number of images we need, including study and test phases
-    image_list=randomly_pick_images([mfilename('fullpath') '/imageset_1a'],num_images); %randomly pick that number of images from our image set:
+    imagesPath=mfilename('fullpath');
+    imagesPath=[imagesPath(1:end-length(mfilename())) 'imageset_1a'];
+    image_list=randomly_pick_images(imagesPath,num_images); %randomly pick that number of images from our image set:
     
     % Assign those objects and scenes to one of 3 groups: practice, study and test foils
     trials.practice=image_list(1:PARAMETERS.num_practice_images); %get practice images
