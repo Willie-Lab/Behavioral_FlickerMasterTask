@@ -22,4 +22,10 @@ function PTParameters=initialize_psychToolbox()
     PTParameters.key.in=KbName('LeftArrow');
     PTParameters.key.out=KbName('RightArrow');
     
+    %for the test phase:
+    PTParameters.key.one=KbName('1!');
+    PTParameters.key.two=KbName('2@');
+    PTParameters.key.three=KbName('3#');
+    PTParameters.key.four=KbName('4$');
+    
 end

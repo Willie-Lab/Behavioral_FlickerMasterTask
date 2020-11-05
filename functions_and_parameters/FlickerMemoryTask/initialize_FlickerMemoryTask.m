@@ -3,7 +3,7 @@
 function [PARAMETERS,trials]=initialize_FlickerMemoryTask()
     
     %% Establish memory task parameters
-    PARAMETERS=set_PARAMETERS(1); %set to day 1 parameters
+    PARAMETERS=set_PARAMETERS(); %set to day 1 parameters
     
     %% Pick and images we'll need for practice, study and test:
     num_images=PARAMETERS.num_practice_images+PARAMETERS.num_study_images+PARAMETERS.num_study_images/2; %calculate total number of images we need, including study and test phases
