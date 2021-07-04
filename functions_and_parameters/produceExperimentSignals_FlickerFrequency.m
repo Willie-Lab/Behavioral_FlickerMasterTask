@@ -45,7 +45,7 @@
 % * 1 field, 'sample_rate' indicating the sample rate of the signal, to be used on the NIDAQ.
 %
 
-function sourceSignal=produceExperimentSignals_FlickerFrequency(experimentType,duty_cycle_LED,duty_cycle_sound,sound_frequency,type_of_burst,sample_rate,frequencies_tested,modalities_tested,repeat_limit,stimPeriod_duration,postStimPeriod,numberOfTrials_perCondition,nber_sessions)
+function sourceSignal=produceExperimentSignals_FlickerFrequency(duty_cycle_LED,duty_cycle_sound,sound_frequency,type_of_burst,sample_rate,frequencies_tested,modalities_tested,repeat_limit,stimPeriod_duration,postStimPeriod,numberOfTrials_perCondition,nber_sessions,trial_random)
     
     %% Set parameters of randomization
     randomFlicker_frequency=40; %picking average of 40Hz for random flicker
@@ -68,17 +68,17 @@ function sourceSignal=produceExperimentSignals_FlickerFrequency(experimentType,d
     end
     
     %% Set order of trials:
-    if strcmp(experimentType,'neurophys_experiment') % if want to create signals for an actual experiment
-        %set correct names of conditions:
-        temp_frequencies_tested=frequencies_tested;
-        if any(ismember(temp_frequencies_tested,0))
-            baseline_present=1;
-            temp_frequencies_tested(ismember(temp_frequencies_tested,0))=[];
-        end
-        temp_frequencies_tested=strtrim(string(num2str(temp_frequencies_tested')));
-        temp_frequencies_tested(~ismember(temp_frequencies_tested,'-1'))=strcat(temp_frequencies_tested(~ismember(temp_frequencies_tested,'-1')),'Hz');
-        temp_frequencies_tested(ismember(temp_frequencies_tested,'-1'))='R';
-        
+    %set correct names of conditions:
+    temp_frequencies_tested=frequencies_tested;
+    temp_frequencies_tested=strtrim(string(num2str(temp_frequencies_tested')));
+    temp_frequencies_tested(~ismember(temp_frequencies_tested,'-1'))=strcat(temp_frequencies_tested(~ismember(temp_frequencies_tested,'-1')),'Hz');
+    temp_frequencies_tested(ismember(temp_frequencies_tested,'-1'))='R';
+    if any(ismember(temp_frequencies_tested,'0Hz'))
+        baseline_present=1;
+        temp_frequencies_tested(ismember(temp_frequencies_tested,'0Hz'))=[];
+    end
+    
+    if strcmp(trial_random,'pseudorandom')
         %create a random vector of trials for the experiment (with no more than x repetitions of the same modality or frequency):
         temp=pseudorandomization({temp_frequencies_tested;modalities_tested},repeat_limit,numberOfTrials_perCondition);
         
@@ -97,19 +97,33 @@ function sourceSignal=produceExperimentSignals_FlickerFrequency(experimentType,d
             end
         end
         
-        %divide trials up into x sessions:
-        trials_vector=strings(ceil(length(temp)/nber_sessions),nber_sessions); %initialize vector of trials: 6 columns, each corresponding to a session in this experiment (total of 6 sessions, ideally 10min each, per experiment)
-        for i=1:nber_sessions
-            if i~=nber_sessions
-                trials_vector(1:ceil(length(temp)/nber_sessions),i)=temp((i-1)*ceil(length(temp)/nber_sessions)+1:i*ceil(length(temp)/nber_sessions));
-            elseif i==nber_sessions
-                trials_vector(1:length(temp((i-1)*ceil(length(temp)/nber_sessions)+1:end)),i)=temp((i-1)*ceil(length(temp)/nber_sessions)+1:end);
-            end
+    elseif strcmp(trial_random,'distributed_random')
+        nber_stimconditions=length(temp_frequencies_tested)*length(modalities_tested);
+        temp=strings(1,numberOfTrials_perCondition*nber_stimconditions);
+        
+        for i=0:numberOfTrials_perCondition-1
+            temp(nber_stimconditions*i+1:nber_stimconditions*i+nber_stimconditions)=pseudorandomization({temp_frequencies_tested;modalities_tested},repeat_limit,1);
         end
         
-        sourceSignal.trials_vector=trials_vector; %add information about trials into the main structure
-        
+        if baseline_present
+            baseline_rand=sort(datasample(1:nber_stimconditions,numberOfTrials_perCondition)); %randomly sample from 1 to number of stim conditions, with replacement, a numberOfTrials_perCondition times
+            for i=1:length(baseline_rand) %insert baseline trials
+                temp=[temp(1:(i-1)*(nber_stimconditions+1)+baseline_rand(i)-1) "Baseline" temp((i-1)*(nber_stimconditions+1)+baseline_rand(i):end)];
+            end
+        end
     end
+    
+    %divide trials up into x sessions:
+    trials_vector=strings(ceil(length(temp)/nber_sessions),nber_sessions); %initialize vector of trials: 6 columns, each corresponding to a session in this experiment (total of 6 sessions, ideally 10min each, per experiment)
+    for i=1:nber_sessions
+        if i~=nber_sessions
+            trials_vector(1:ceil(length(temp)/nber_sessions),i)=temp((i-1)*ceil(length(temp)/nber_sessions)+1:i*ceil(length(temp)/nber_sessions));
+        elseif i==nber_sessions
+            trials_vector(1:length(temp((i-1)*ceil(length(temp)/nber_sessions)+1:end)),i)=temp((i-1)*ceil(length(temp)/nber_sessions)+1:end);
+        end
+    end
+    
+    sourceSignal.trials_vector=trials_vector; %add information about trials into the main structure
 
 end
 
