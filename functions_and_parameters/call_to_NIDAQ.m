@@ -54,7 +54,7 @@ function call_to_NIDAQ(app,command,varargin)
                 %set digital channel (which will indicate start of each trial, and code various commands):
                 app.NI_session_digital=daq.createSession('ni'); %create a digital daq session
                 app.NI_session_digital.Rate=10000;
-                app.NI_session_digital.NumberOfScans=round(app.NI_session_digital.Rate/3); %maximum duration of digital session is 1/3rd of a second, which means that can only have up to about 30 different sync pulse codes
+                app.NI_session_digital.NumberOfScans=round(app.NI_session_digital.Rate/2); %maximum duration of digital session is half of a second, which means that can only have up to about 50 different sync pulse codes
                 app.digital_channel=addCounterOutputChannel(app.NI_session_digital,'Dev1','ctr0','PulseGeneration'); %create a digital channel at PFI12; this is used for the coding sync pulse, and to trigger start of data queued in the analog session %CHECK IF CAN CHANGE OUTPUT COUNTER TO PFI1 (FOR PRACTICALITY OF CONNETING BNC CABLES)
                 app.digital_channel.InitialDelay=0;
                 app.digital_channel.Frequency=1; %means that for 100% duty cycle, pulse will be 1sec long; for pulse_duration*duty cycle, pulse will be pulse_duration long
