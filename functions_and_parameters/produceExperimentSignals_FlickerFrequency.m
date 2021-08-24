@@ -49,11 +49,13 @@ function sourceSignal=produceExperimentSignals_FlickerFrequency(safetyTesting,du
     
     %% Set parameters of randomization
     randomFlicker_frequency=40; %picking average of 40Hz for random flicker
+    jittered_interval=0.5; %maximum of 0.5s added to the postStimPeriod
     
     %% Produce all signals:
     %create a structure that will store all 
     sourceSignal=struct();
     sourceSignal.sample_rate=sample_rate;
+    sourceSignal.added_intervals={}; %this will store how long of a 0.5s jittered interval should we add at the end of a trial
     for i=1:length(frequencies_tested)
         if frequencies_tested(i)==-1 %means random
             if ~safetyTesting
@@ -72,9 +74,12 @@ function sourceSignal=produceExperimentSignals_FlickerFrequency(safetyTesting,du
         end
     end
     
-    
     %% Set order of trials (in case we are running experiment, i.e. not necessary for safetyTesting):
-    if ~safetyTesting
+    if safetyTesting
+        for i=1:sum(frequencies_tested~=0) %for all frequencies tested except baseline condition
+            sourceSignal.added_intervals{i}=round(rand*jittered_interval*sample_rate); %add jittered interval to postStimPeriod
+        end
+    elseif ~safetyTesting
         %set correct names of conditions:
         temp_frequencies_tested=frequencies_tested;
         temp_frequencies_tested=strtrim(string(num2str(temp_frequencies_tested')));
@@ -131,6 +136,10 @@ function sourceSignal=produceExperimentSignals_FlickerFrequency(safetyTesting,du
         end
 
         sourceSignal.trials_vector=trials_vector; %add information about trials into the main structure
+        
+        for i=1:length(frequencies_tested)*numberOfTrials_perCondition %for total number of trials, add a specific jittered interval to postStimPeriod
+            sourceSignal.added_intervals{i}=round(rand*jittered_interval*sample_rate); %add jittered interval to postStimPeriod
+        end
     end
 
 end
